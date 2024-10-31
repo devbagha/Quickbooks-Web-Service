@@ -344,7 +344,7 @@ namespace WCWebService
 		/// OUT:
 		/// string retVal
 		/// Possible values: 
-		/// - “done” = no further action required from QBWebConnector
+		/// - Â“doneÂ” = no further action required from QBWebConnector
 		/// - any other string value = use this name for company file
 		/// </summary>
 		public string connectionError(string ticket, string hresult, string message)
@@ -429,7 +429,7 @@ namespace WCWebService
 		/// OUT:
 		/// string request
 		/// Possible values: 
-		/// - “any_string” = Request XML for QBWebConnector to process
+		/// - Â“any_stringÂ” = Request XML for QBWebConnector to process
 		/// - "" = No more request XML 
 		/// </summary>
 		public string sendRequestXML(string ticket, string strHCPResponse, string strCompanyFileName, 
@@ -1913,6 +1913,69 @@ namespace WCWebService
                 // Add the XML string to the request
                 req.Add(requestXml);
             }
+
+
+     using System;
+using System.Xml;
+
+// Assuming requestIdCounter and req list are defined elsewhere
+            requestIdCounter = 13000;
+
+for (int i = 1; i <= 6; i++) // Loop through the last 6 months
+{
+    DateTime monthStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(-i);
+    DateTime monthEnd = new DateTime(monthStart.Year, monthStart.Month, DateTime.DaysInMonth(monthStart.Year, monthStart.Month));
+    
+    string startDate = monthStart.ToString("yyyy-MM-dd");
+    string endDate = monthEnd.ToString("yyyy-MM-dd");
+
+    // Reset variables for each iteration
+    strRequestXML = "";
+    inputXMLDoc = null;
+    qbXML = null;
+    qbXMLMsgsRq = null;
+
+    // Create a new XML document
+    inputXMLDoc = new XmlDocument();
+    inputXMLDoc.AppendChild(inputXMLDoc.CreateXmlDeclaration("1.0", "utf-8", null));
+    inputXMLDoc.AppendChild(inputXMLDoc.CreateProcessingInstruction("qbxml", "version=\"13.0\""));
+
+    qbXML = inputXMLDoc.CreateElement("QBXML");
+    inputXMLDoc.AppendChild(qbXML);
+
+    qbXMLMsgsRq = inputXMLDoc.CreateElement("QBXMLMsgsRq");
+    qbXML.AppendChild(qbXMLMsgsRq);
+    qbXMLMsgsRq.SetAttribute("onError", "stopOnError");
+
+    // Define GeneralSummaryReportQueryRq for ProfitAndLossStandard with ReportPeriod
+    XmlElement generalSummaryReportQueryRq = inputXMLDoc.CreateElement("GeneralSummaryReportQueryRq");
+    qbXMLMsgsRq.AppendChild(generalSummaryReportQueryRq);
+
+    XmlElement generalSummaryReportType = inputXMLDoc.CreateElement("GeneralSummaryReportType");
+    generalSummaryReportType.InnerText = "ProfitAndLossStandard";
+    generalSummaryReportQueryRq.AppendChild(generalSummaryReportType);
+
+    // Define ReportPeriod with dynamic start and end dates
+    XmlElement reportPeriod = inputXMLDoc.CreateElement("ReportPeriod");
+    generalSummaryReportQueryRq.AppendChild(reportPeriod);
+
+    XmlElement fromReportDate = inputXMLDoc.CreateElement("FromReportDate");
+    fromReportDate.InnerText = startDate;
+    reportPeriod.AppendChild(fromReportDate);
+
+    XmlElement toReportDate = inputXMLDoc.CreateElement("ToReportDate");
+    toReportDate.InnerText = endDate;
+    reportPeriod.AppendChild(toReportDate);
+
+    // Set a unique requestID for each iteration
+    generalSummaryReportQueryRq.SetAttribute("requestID", requestIdCounter.ToString());
+    requestIdCounter++;
+
+    // Convert the XML document to a string and add it to the request list
+    strRequestXML = inputXMLDoc.OuterXml;
+    req.Add(strRequestXML);
+}
+
 
 
             return req;
